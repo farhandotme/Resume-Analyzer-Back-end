@@ -29,3 +29,5 @@ htmlcov/
 # IDE specific (Optional but recommended)
 .vscode/
 .idea/
+
+ai_details.txt

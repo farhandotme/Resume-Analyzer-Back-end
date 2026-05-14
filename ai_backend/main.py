@@ -1,6 +1,15 @@
-def main():
-    print("Hello from ai-backend!")
+from fastapi import FastAPI
+
+from routes.chat import router as chatRouter
+
+from services.rag_service import router as servicesRouter
+
+app = FastAPI()
+
+app.include_router(chatRouter)
+app.include_router(servicesRouter)
 
 
-if __name__ == "__main__":
-    main()
+@app.get("/")
+def read_root():
+    return {"message": "Hello, this is AI RESUME CHECKER"}
