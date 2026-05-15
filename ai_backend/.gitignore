@@ -2,7 +2,8 @@
 .venv/
 venv/
 env/
-
+qdrant_storage
+qdrant_db
 # Environment variables (Crucial for API keys/secrets)
 .env
 .env.*
