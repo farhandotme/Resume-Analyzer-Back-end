@@ -36,7 +36,7 @@ async def rag_storing_pdf(req: PdfData):
 
     # text splitter--->
 
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
     texts = text_splitter.split_documents(data)
 
     # embedding Model -------
@@ -59,3 +59,33 @@ async def rag_storing_pdf(req: PdfData):
         collection_name=collection_name,
     )
     return {"message": "Resume stored successfully", "collection": f"resume_{user_id}"}
+
+
+class for_retriveing(BaseModel):
+    user_id: str
+    message: str
+
+
+@router.post("/retrive-data")
+async def retrive_resume_chanks(req: for_retriveing):
+    user_id = req.user_id
+    message = req.message
+    embeddings = HuggingFaceEmbeddings(
+        model_name="sentence-transformers/all-MiniLM-L6-v2"
+    )
+    vector_store = QdrantVectorStore.from_existing_collection(
+        embedding=embeddings,
+        url="http://localhost:6333",
+        collection_name=f"resume_{user_id}",
+    )
+    docs = vector_store.similarity_search(query=message, k=3)
+
+    retrieved_chunks = []
+
+    for doc in docs:
+        retrieved_chunks.append(doc.page_content)
+
+    return {
+        "message": "Relevant chunks retrieved successfully",
+        "chunks": retrieved_chunks,
+    }
