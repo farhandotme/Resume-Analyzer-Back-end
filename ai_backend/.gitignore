@@ -7,7 +7,7 @@ qdrant_db
 # Environment variables (Crucial for API keys/secrets)
 .env
 .env.*
-
+testing 
 # Python bytecode
 __pycache__/
 *.py[cod]
