@@ -1,67 +1,113 @@
+import logging
+
 from langchain_community.document_loaders import PyMuPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_qdrant import QdrantVectorStore
 from qdrant_client import QdrantClient
 
-# import the ONE shared embedding model - same model for storing AND retrieving
 from config.ai_models import embeddings
 
 from dotenv import load_dotenv
 
 load_dotenv()
 
+logger = logging.getLogger(__name__)
+
 
 def rag_storing_pdf(user_id: str, pdf_url: str):
 
-    print("Loading PDF from url:", pdf_url)
+    # Step 1 — load PDF
+    try:
+        loader = PyMuPDFLoader(pdf_url)
+        data = loader.load()
+    except Exception as e:
+        logger.error(f"PDF loading failed for url {pdf_url}: {e}")
+        return {
+            "success": False,
+            "error": "Could not load PDF. Check the URL and try again.",
+        }
 
-    loader = PyMuPDFLoader(pdf_url)
-    data = loader.load()
+    # Step 2 — split into chunks
+    try:
+        text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=500, chunk_overlap=100
+        )
+        texts = text_splitter.split_documents(data)
 
-    collection_name = f"resume_{user_id}"
+        if len(texts) == 0:
+            return {
+                "success": False,
+                "error": "PDF has no readable text. It might be a scanned image.",
+            }
 
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100)
-    texts = text_splitter.split_documents(data)
+        logger.info(f"Total chunks created: {len(texts)}")
+    except Exception as e:
+        logger.error(f"Text splitting failed: {e}")
+        return {"success": False, "error": "Could not process PDF content."}
 
-    print(f"Total chunks created: {len(texts)}")
-    for i, t in enumerate(texts):
-        print(f"  Chunk {i}: {t.page_content[:80]}...")
+    # Step 3 — store in Qdrant
+    try:
+        collection_name = f"resume_{user_id}"
+        client = QdrantClient(url="http://localhost:6333")
+        collections = client.get_collections().collections
+        existing_collections = [c.name for c in collections]
 
-    client = QdrantClient(url="http://localhost:6333")
-    collections = client.get_collections().collections
-    existing_collections = [c.name for c in collections]
+        if collection_name in existing_collections:
+            logger.info(f"Deleting old collection: {collection_name}")
+            client.delete_collection(collection_name=collection_name)
 
-    if collection_name in existing_collections:
-        print(f"Deleting old collection: {collection_name}")
-        client.delete_collection(collection_name=collection_name)
+        QdrantVectorStore.from_documents(
+            documents=texts,
+            embedding=embeddings,
+            url="http://localhost:6333",
+            collection_name=collection_name,
+        )
 
-    vector_store = QdrantVectorStore.from_documents(
-        documents=texts,
-        embedding=embeddings,  # <-- shared model from ai_models.py
-        url="http://localhost:6333",
-        collection_name=collection_name,
-    )
+        logger.info("Resume stored successfully!")
+        return {
+            "success": True,
+            "message": "Resume stored successfully",
+            "collection": collection_name,
+        }
 
-    print("Resume stored successfully!")
-    return {"message": "Resume stored successfully", "collection": collection_name}
+    except Exception as e:
+        logger.error(f"Qdrant storage failed: {e}")
+        return {
+            "success": False,
+            "error": "Could not store resume. Database might be down.",
+        }
 
 
 def retrive_resume_chanks(user_id: str, user_query: str):
 
+    # Step 1 — connect to collection
+    try:
+        vector_store = QdrantVectorStore.from_existing_collection(
+            embedding=embeddings,
+            url="http://localhost:6333",
+            collection_name=f"resume_{user_id}",
+        )
+    except Exception as e:
+        logger.error(f"Qdrant connection failed for user {user_id}: {e}")
+        return {
+            "success": False,
+            "error": "Could not connect to database. Upload your resume first.",
+        }
 
-    # Connect to the existing collection for this user
-    vector_store = QdrantVectorStore.from_existing_collection(
-        embedding=embeddings,  # <-- same shared model, so vectors match
-        url="http://localhost:6333",
-        collection_name=f"resume_{user_id}",
-    )
+    # Step 2 — search chunks
+    try:
+        docs = vector_store.similarity_search(query=user_query, k=4)
+    except Exception as e:
+        logger.error(f"Similarity search failed for user {user_id}: {e}")
+        return {"success": False, "error": "Could not search resume. Try again."}
 
-    docs = vector_store.similarity_search(query=user_query, k=4)
+    # Step 3 — check if anything came back
+    if not docs or len(docs) == 0:
+        logger.warning(f"No chunks found for user {user_id} query: '{user_query}'")
+        return {
+            "success": False,
+            "error": "No relevant content found. Try rephrasing your question.",
+        }
 
-    print(f"\nRetrieved {len(docs)} chunks for query: '{user_query}'")
-    for i, doc in enumerate(docs):
-        print(f"  Retrieved chunk {i}: {doc.page_content[:100]}...")
-
-    retrieved_chunks = [doc.page_content for doc in docs]
-
-    return retrieved_chunks
+    logger.info(f"Retrieved {len(docs)} chunks for user {user_id}")
+    return {"success": True, "chunks": [doc.page_content for doc in docs]}
