@@ -14,6 +14,7 @@ click==8.1.6
 cloud-init==25.3
 colorama==0.4.6
 command-not-found==0.3
+compizconfig-python==0.9.14.2
 configobj==5.0.8
 cryptography==41.0.7
 cupshelpers==1.0
@@ -51,11 +52,11 @@ olefile==0.46
 packaging==24.0
 pexpect==4.9.0
 pillow==10.2.0
-proton-core==0.7.3
+proton-core==0.7.4
 proton-keyring-linux==0.2.1
 proton-vpn-api-core==5.1.2
 proton-vpn-daemon==0.13.7
-proton-vpn-gtk-app==4.16.1
+proton-vpn-gtk-app==4.16.2
 psutil==5.9.8
 ptyprocess==0.7.0
 pycairo==1.25.1
