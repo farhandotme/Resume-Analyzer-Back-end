@@ -44,3 +44,56 @@ export const signUp = async (req: Request, res: Response) => {
     });
   }
 };
+
+// login controller
+
+export const login = async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+
+    // check fields
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        error: "Email and password are required.",
+      });
+    }
+
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ message: "Email not found", success: false });
+    }
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid) {
+      return res.status(401).json({
+        success: false,
+        error: "Wrong password.",
+      });
+    }
+
+    // create JWT
+    const token = jwt.sign(
+      { userId: user.id },
+      process.env.JWT_SECRET as string,
+      { expiresIn: "7d" },
+    );
+
+    return res.status(200).json({
+      success: true,
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+      },
+    });
+  } catch (error) {
+    console.error("Login error:", error);
+    return res.status(500).json({
+      success: false,
+      error: "Something went wrong. Try again.",
+    });
+  }
+};
