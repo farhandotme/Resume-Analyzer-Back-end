@@ -1,5 +1,4 @@
 import { Router } from "express";
-import type { Request, Response } from "express";
 import { login, profile, signUp } from "../controllers/userControllers";
 import { verifyToken } from "../middleware/authMiddleware";
 
