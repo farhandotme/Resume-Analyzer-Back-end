@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import prisma from "../config/db";
-import axios, { type responseEncoding } from "axios";
+import axios from "axios";
 
 const FASTAPI_URL = process.env.FASTAPI_URL;
 
@@ -71,8 +71,9 @@ export const deleteResume = async (req: Request, res: Response) => {
   try {
     const { id } = req.params as { id: string };
 
-    // make sure this resume belongs to this user
-    const resume = await prisma.resume.findUnique({ where: { id } });
+    const resume = await prisma.resume.findUnique({
+      where: { id },
+    });
 
     if (!resume) {
       return res.status(404).json({
@@ -88,7 +89,19 @@ export const deleteResume = async (req: Request, res: Response) => {
       });
     }
 
-    await prisma.resume.delete({ where: { id } });
+    await prisma.$transaction([
+      prisma.analysis.deleteMany({
+        where: {
+          resumeId: id,
+        },
+      }),
+
+      prisma.resume.delete({
+        where: {
+          id,
+        },
+      }),
+    ]);
 
     return res.status(200).json({
       success: true,
@@ -96,6 +109,7 @@ export const deleteResume = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Delete resume error:", error);
+
     return res.status(500).json({
       success: false,
       error: "Could not delete resume. Try again.",

@@ -6,8 +6,8 @@ import type { Request, Response } from "express";
 // signup controller
 export const signUp = async (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body;
-    if (!email || !password) {
+    const { name, email, password } = req.body;
+    if (!name || !email || !password) {
       return res.status(400).json({
         success: false,
         error: "Email and password are required.",
@@ -28,7 +28,7 @@ export const signUp = async (req: Request, res: Response) => {
 
     // create user
     const user = await prisma.user.create({
-      data: { email, password: hashed },
+      data: { name, email, password: hashed },
     });
 
     return res.status(201).json({
