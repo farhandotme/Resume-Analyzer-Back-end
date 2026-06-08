@@ -19,28 +19,65 @@ class AnalyzeRequest(BaseModel):
 
 @router.post("/analyze")
 async def analyze_resume(req: AnalyzeRequest):
-    # push job to queue and return job_id immediately
-    task = analyze_resume_task.delay(pdf_url=req.pdf_url, job_title=req.job_title)
-    logger.info(f"Analyze job queued: {task.id} for job_title: {req.job_title}")
-    return {"success": True, "job_id": task.id}
+    try:
+        task = analyze_resume_task.delay(req.pdf_url, req.job_title)
+
+        logger.info(f"Analyze job queued: {task.id} for job_title: {req.job_title}")
+
+        return {"success": True, "job_id": task.id}
+
+    except Exception as e:
+        logger.exception("Failed to queue analysis task")
+
+        return {"success": False, "error": str(e)}
 
 
 @router.get("/analyze/status/{job_id}")
 async def get_status(job_id: str):
-    task = analyze_resume_task.AsyncResult(job_id)
+    try:
+        task = analyze_resume_task.AsyncResult(job_id)
 
-    if task.state == "PENDING":
-        return {"success": True, "status": "processing", "data": None}
+        if task.state == "PENDING":
+            return {
+                "success": True,
+                "status": "processing",
+                "data": None,
+            }
 
-    elif task.state == "SUCCESS":
-        return {"success": True, "status": "done", "data": task.result}
+        elif task.state == "FAILURE":
+            return {
+                "success": False,
+                "status": "failed",
+                "error": str(task.result),
+            }
 
-    elif task.state == "FAILURE":
+        elif task.state == "SUCCESS":
+            result = task.result
+
+            if isinstance(result, dict) and result.get("success") is False:
+                return {
+                    "success": False,
+                    "status": "failed",
+                    "error": result.get("error"),
+                }
+
+            return {
+                "success": True,
+                "status": "done",
+                "data": result,
+            }
+
+        return {
+            "success": True,
+            "status": task.state.lower(),
+            "data": None,
+        }
+
+    except Exception as e:
+        logger.exception("Status check failed")
+
         return {
             "success": False,
             "status": "failed",
-            "error": "Analysis failed. Try again.",
+            "error": str(e),
         }
-
-    else:
-        return {"success": True, "status": task.state.lower(), "data": None}

@@ -1,5 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
+import resumeRoutes from "./src/routes/resumeRoutes";
 dotenv.config();
 
 import userRoutes from "./src/routes/userRoutes";
@@ -11,6 +12,8 @@ app.get("/", (req, res) => {
 });
 
 app.use("/user/api", userRoutes);
+
+app.use("/resume", resumeRoutes);
 app.listen(3000, () => {
   console.log("running on port 3000");
 });

@@ -130,6 +130,8 @@ export const analyzeResume = async (req: Request, res: Response) => {
     });
     const { job_id } = fastApiRes.data;
 
+    console.log(job_id);
+
     // Step 3 — poll until done
     const result = await new Promise<any>((resolve, reject) => {
       const interval = setInterval(async () => {
