@@ -2,6 +2,7 @@ import { Router } from "express";
 import { verifyToken } from "../middleware/authMiddleware";
 import {
   analyzeResume,
+  chatResume,
   deleteResume,
   getAllResume,
   getHistory,
@@ -22,5 +23,8 @@ router.post("/analyze", analyzeResume);
 // history
 router.get("/history", getHistory);
 router.get("/history/:id", getOneAnalysis);
+
+// chat - chat about the resume
+router.post("/chat", chatResume);
 
 export default router;

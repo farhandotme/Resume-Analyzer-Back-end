@@ -144,8 +144,6 @@ export const analyzeResume = async (req: Request, res: Response) => {
     });
     const { job_id } = fastApiRes.data;
 
-    console.log(job_id);
-
     // Step 3 — poll until done
     const result = await new Promise<any>((resolve, reject) => {
       const interval = setInterval(async () => {
@@ -257,6 +255,47 @@ export const getOneAnalysis = async (req: Request, res: Response) => {
     return res.status(500).json({
       success: false,
       error: "Could not fetch analysis. Try again.",
+    });
+  }
+};
+
+export const chatResume = async (req: Request, res: Response) => {
+  try {
+    const { pdfUrl, message } = req.body;
+
+    if (!pdfUrl) {
+      return res
+        .status(404)
+        .json({ success: false, error: "Please Upload the PDF" });
+    }
+    if (!message) {
+      return res.status(404).json({
+        success: false,
+        error: "Please Enter the message You want to Ask",
+      });
+    }
+
+    const resume = await prisma.resume.create({
+      data: {
+        userId: req.userId as string,
+        pdf_url: pdfUrl,
+      },
+    });
+
+    const fastApiRes = await axios.post(`${FASTAPI_URL}/chat`, {
+      pdf_url: pdfUrl,
+      message,
+      user_id: req.userId as string,
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: fastApiRes.data,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      error,
     });
   }
 };
