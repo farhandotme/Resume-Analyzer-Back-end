@@ -1,17 +1,19 @@
 import logging
+import os
 
 from langchain_community.document_loaders import PyMuPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_qdrant import QdrantVectorStore
 from qdrant_client import QdrantClient
-
 from config.ai_models import embeddings
-
 from dotenv import load_dotenv
 
 load_dotenv()
 
 logger = logging.getLogger(__name__)
+
+# defined once at top — works locally and in Docker
+QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
 
 
 def rag_storing_pdf(user_id: str, pdf_url: str):
@@ -48,7 +50,7 @@ def rag_storing_pdf(user_id: str, pdf_url: str):
     # Step 3 — store in Qdrant
     try:
         collection_name = f"resume_{user_id}"
-        client = QdrantClient(url="http://localhost:6333")
+        client = QdrantClient(url=QDRANT_URL)
         collections = client.get_collections().collections
         existing_collections = [c.name for c in collections]
 
@@ -59,7 +61,7 @@ def rag_storing_pdf(user_id: str, pdf_url: str):
         QdrantVectorStore.from_documents(
             documents=texts,
             embedding=embeddings,
-            url="http://localhost:6333",
+            url=QDRANT_URL,
             collection_name=collection_name,
         )
 
@@ -84,7 +86,7 @@ def retrive_resume_chanks(user_id: str, user_query: str):
     try:
         vector_store = QdrantVectorStore.from_existing_collection(
             embedding=embeddings,
-            url="http://localhost:6333",
+            url=QDRANT_URL,
             collection_name=f"resume_{user_id}",
         )
     except Exception as e:
