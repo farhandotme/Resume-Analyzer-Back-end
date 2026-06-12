@@ -2,53 +2,31 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import prisma from "../config/db";
 import type { Request, Response } from "express";
+import { sendOTPEmail } from "../utils/mailer";
+import crypto from "crypto";
 
-// signup controller
-export const signUp = async (req: Request, res: Response) => {
+export const verifyEmail = async (req: Request, res: Response) => {
   try {
-    const { name, email, password } = req.body;
-    if (!name || !email || !password) {
-      return res.status(400).json({
+    const otp = crypto.randomInt(1000, 9999).toString();
+    const { name, email } = req.body;
+    if (!email || !name) {
+      return res.status(404).json({
         success: false,
-        error: "Email and password are required.",
+        message: "All Fields Required",
       });
     }
 
-    // check if user already exists
-    const existing = await prisma.user.findUnique({ where: { email } });
-    if (existing) {
-      return res.status(400).json({
-        success: false,
-        error: "Email already registered.",
-      });
-    }
-
-    // hash password
-    const hashed = await bcrypt.hash(password, 10);
-
-    // create user
-    const user = await prisma.user.create({
-      data: { name, email, password: hashed },
-    });
-
-    // create JWT
-    const token = jwt.sign(
-      { userId: user.id },
-      process.env.JWT_SECRET as string,
-      { expiresIn: "7d" },
-    );
-    res.cookie("token", token);
-
-    return res.status(201).json({
+    await sendOTPEmail(email, otp);
+    return res.status(200).json({
       success: true,
-      message: "Account created successfully.",
-      userId: user.id,
+      message: `Otp has sent to ${email}`,
     });
   } catch (error) {
-    console.error("Signup error:", error);
     return res.status(500).json({
       success: false,
-      error: "Something went wrong. Try again.",
+      message: "error from catch",
+
+      error,
     });
   }
 };

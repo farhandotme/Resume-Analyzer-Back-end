@@ -4,11 +4,11 @@ const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
     user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASSWORD, // app password, not your real password
+    pass: process.env.GMAIL_APP_PASSWORD,
   },
 });
 
-export async function sendOTPEmail(toEmail: any, otp: string) {
+export async function sendOTPEmail(toEmail: string, otp: string) {
   await transporter.sendMail({
     from: `"Resume Analyzer" <${process.env.GMAIL_USER}>`,
     to: toEmail,

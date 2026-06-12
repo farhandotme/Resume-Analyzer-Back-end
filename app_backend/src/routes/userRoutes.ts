@@ -1,10 +1,15 @@
 import { Router } from "express";
-import { login, logout, profile, signUp } from "../controllers/userControllers";
+import {
+  login,
+  logout,
+  profile,
+  verifyEmail,
+} from "../controllers/userControllers";
 import { verifyToken } from "../middleware/authMiddleware";
 
 const router = Router();
 
-router.post("/signup", signUp);
+router.post("/verify-email", verifyEmail);
 router.post("/login", login);
 router.post("/profile", verifyToken, profile);
 router.get("/logout", logout);
