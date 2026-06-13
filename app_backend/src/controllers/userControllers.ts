@@ -53,6 +53,7 @@ export const verifyEmail = async (req: Request, res: Response) => {
   } catch (error) {
     return res.status(500).json({
       success: false,
+      message: "error from the otp",
       error,
     });
   }
@@ -114,7 +115,7 @@ export const setPassword = async (req: Request, res: Response) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    await prisma.user.update({
+    const user = await prisma.user.update({
       where: {
         email: email,
       },
@@ -124,9 +125,30 @@ export const setPassword = async (req: Request, res: Response) => {
       },
     });
 
+    const token = jwt.sign(
+      {
+        id: user.id,
+      },
+      process.env.JWT_SECRET as string,
+      {
+        expiresIn: "7d",
+      },
+    );
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
     return res.status(200).json({
       success: true,
       message: "Registration completed",
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+      },
     });
   } catch (error) {
     return res.status(500).json({
