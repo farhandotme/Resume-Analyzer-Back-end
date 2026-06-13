@@ -84,9 +84,11 @@ services:
       - DATABASE_URL=${DATABASE_URL}
       - JWT_SECRET=${JWT_SECRET}
       - FASTAPI_URL=http://fastapi:8000
+      - REDIS_URL=redis://redis:6379
     depends_on:
       - postgres
       - fastapi
+      - redis
     command: sh -c "bunx prisma migrate deploy && bun index.ts"
 
 volumes:
