@@ -85,6 +85,8 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - FASTAPI_URL=http://fastapi:8000
       - REDIS_URL=redis://redis:6379
+      - GMAIL_USER=${GMAIL_USER}
+      - GMAIL_APP_PASSWORD=${GMAIL_APP_PASSWORD}
     depends_on:
       - postgres
       - fastapi
