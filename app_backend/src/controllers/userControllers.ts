@@ -8,6 +8,8 @@ import redisClient from "../../config/redis";
 
 export const verifyEmail = async (req: Request, res: Response) => {
   try {
+    const otp = crypto.randomInt(1000, 9999).toString();
+    const otpHash = await bcrypt.hash(otp, 10);
     const { name, email } = req.body;
 
     if (!name || !email) {
@@ -21,10 +23,22 @@ export const verifyEmail = async (req: Request, res: Response) => {
       where: { email },
     });
 
-    if (existingUser) {
+    if (existingUser && existingUser.isVerified) {
       return res.status(400).json({
         success: false,
         message: "Email already registered",
+      });
+    }
+    if (existingUser && !existingUser.isVerified) {
+      await sendOTPEmail(email, otp);
+      await redisClient.del(`otp:${email}`);
+      await redisClient.set(`otp:${email}`, otpHash, {
+        EX: 300,
+      });
+      return res.status(200).json({
+        success: true,
+        message: "OTP sent successfully",
+        userId: existingUser.id,
       });
     }
 
@@ -34,10 +48,6 @@ export const verifyEmail = async (req: Request, res: Response) => {
         email,
       },
     });
-
-    const otp = crypto.randomInt(1000, 9999).toString();
-
-    const otpHash = await bcrypt.hash(otp, 10);
 
     await redisClient.set(`otp:${email}`, otpHash, {
       EX: 300,
