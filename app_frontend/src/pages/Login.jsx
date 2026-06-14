@@ -1,45 +1,87 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowLeft, Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle } from 'lucide-react';
+import { loginUser } from '../services/authApi';
+
+function Spinner() {
+    return (
+        <svg className='animate-spin' width='14' height='14' viewBox='0 0 24 24' fill='none'>
+            <circle cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='3' strokeOpacity='0.3'/>
+            <path d='M12 2a10 10 0 0 1 10 10' stroke='currentColor' strokeWidth='3' strokeLinecap='round'/>
+        </svg>
+    );
+}
+
+function ApiErrorBanner({ error }) {
+    return (
+        <div style={{ maxHeight: error ? '60px' : '0', opacity: error ? 1 : 0, overflow: 'hidden', transition: 'max-height 0.3s ease, opacity 0.25s ease', marginBottom: error ? '16px' : '0' }}>
+            <div className='flex items-start gap-2 px-3.5 py-2.5 rounded-xl bg-[#1a0a0a] border border-[#3d1515] text-xs text-[#f87171]'>
+                <AlertCircle size={13} className='shrink-0 mt-0.5' />
+                {error}
+            </div>
+        </div>
+    );
+}
 
 export default function Login() {
     const [showPassword, setShowPassword] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [apiError, setApiError] = useState('');
+
+    const navigate = useNavigate();
+
+    const handleLogin = async () => {
+        setApiError('');
+        try {
+            setLoading(true);
+            const data = await loginUser({ email: email.trim(), password });
+            if (data.success) navigate('/');
+        } catch (error) {
+            setApiError(
+                error.response?.data?.message ||
+                error.response?.data?.error ||
+                'Invalid email or password. Please try again.'
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter' && email && password && !loading) handleLogin();
+    };
 
     return (
         <div className='relative min-h-screen w-full bg-[#0A0A0A] text-white overflow-hidden flex items-center justify-center'>
-            <div className='absolute pointer-events-none' style={{ top: 0, right: 0, width: '45%', height: '70%', background: 'radial-gradient(ellipse at 100% 0%, rgba(217,169,25,0.15) 0%, transparent 60%)'}} />
-            <div className='absolute pointer-events-none' style={{ bottom: 0, left: 0, width: '45%', height: '70%', background: 'radial-gradient(ellipse at 0% 100%, rgba(217,169,25,0.12) 0%, transparent 60%)'}} />
+            <div className='absolute pointer-events-none' style={{ top: 0, right: 0, width: '45%', height: '70%', background: 'radial-gradient(ellipse at 100% 0%, rgba(217,169,25,0.15) 0%, transparent 60%)' }} />
+            <div className='absolute pointer-events-none' style={{ bottom: 0, left: 0, width: '45%', height: '70%', background: 'radial-gradient(ellipse at 0% 100%, rgba(217,169,25,0.12) 0%, transparent 60%)' }} />
             <svg className='absolute inset-0 w-full h-full pointer-events-none' viewBox='0 0 1000 800' preserveAspectRatio='xMidYMid slice' style={{ opacity: 1 }}>
                 {[0,1,2,3,4,5,6].map((i) => (
-                    <path
-                        key={`tr-${i}`}
-                        d={`M ${1000} ${i * 80} Q ${800 - i * 30} ${200 + i * 60} ${600 - i * 40} ${800}`}
-                        fill='none'
-                        stroke={`rgba(217,169,25,${0.2 - i * 0.02})`}
-                        strokeWidth='0.7'
-                    />
+                    <path key={`tr-${i}`} d={`M ${1000} ${i * 80} Q ${800 - i * 30} ${200 + i * 60} ${600 - i * 40} ${800}`} fill='none' stroke={`rgba(217,169,25,${0.2 - i * 0.02})`} strokeWidth='0.7' />
                 ))}
                 {[0,1,2,3,4,5,6].map((i) => (
-                    <path
-                        key={`bl-${i}`}
-                        d={`M ${0} ${800 - i * 80} Q ${200 + i * 30} ${600 - i * 60} ${400 + i * 40} ${0}`}
-                        fill='none'
-                        stroke={`rgba(217,169,25,${0.17 - i * 0.02})`}
-                        strokeWidth='0.7'
-                    />
+                    <path key={`bl-${i}`} d={`M ${0} ${800 - i * 80} Q ${200 + i * 30} ${600 - i * 60} ${400 + i * 40} ${0}`} fill='none' stroke={`rgba(217,169,25,${0.17 - i * 0.02})`} strokeWidth='0.7' />
                 ))}
             </svg>
-            <Link to='/' className='group absolute top-6 left-6 flex items-center gap-1.5 text-sm text-[#8a8686] hover:text-[#D9A919] transition-colors duration-200 z-10'><ArrowLeft size={15} className='duration-300 group-hover:-translate-x-0.5 transition-transform' size={15} strokeWidth={2} />Home</Link>
+
+            <Link to='/' className='group absolute top-6 left-6 flex items-center gap-1.5 text-sm text-[#8a8686] hover:text-[#D9A919] transition-colors duration-200 z-10'>
+                <ArrowLeft size={15} className='duration-300 group-hover:-translate-x-0.5 transition-transform' strokeWidth={2} />
+                Home
+            </Link>
+
             <div className='relative z-10 w-full max-w-sm mx-4'>
                 <div className='text-center mb-7'>
                     <h1 className='text-3xl font-bold tracking-tight'>Log in to <span className='text-[#D9A919]'>Resume Analyser</span></h1>
                     <p className='mt-2 text-base text-[#8a8686]'>
                         Don't have an account?{' '}
-                        <Link to='/signup' className='inline-flex items-center gap-1 text-[#D9A919] group'>Sign up <ArrowRight size={16} className='transition-transform duration-300 group-hover:translate-x-0.5' /></Link>
+                        <Link to='/signup' className='inline-flex items-center gap-1 text-[#D9A919] group'>
+                            Sign up <ArrowRight size={16} className='transition-transform duration-300 group-hover:translate-x-0.5' />
+                        </Link>
                     </p>
                 </div>
+
                 <div className='mb-5'>
                     <button className='w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#111] border border-[#2a2a2a] text-sm font-medium text-gray-300 hover:border-[#4a3a10] hover:bg-[#161200] hover:text-white transition-all duration-200'>
                         <svg width='16' height='16' viewBox='0 0 24 24'>
@@ -51,11 +93,15 @@ export default function Login() {
                         Log in with Google
                     </button>
                 </div>
+
                 <div className='flex items-center gap-3 mb-5'>
                     <div className='flex-1 h-px bg-[#222]' />
                     <span className='text-sm text-[#555]'>or</span>
                     <div className='flex-1 h-px bg-[#222]' />
                 </div>
+
+                <ApiErrorBanner error={apiError} />
+
                 <div className='mb-4'>
                     <label className='block text-sm font-medium text-[#aaa] mb-1.5'>Email</label>
                     <div className='relative'>
@@ -63,12 +109,14 @@ export default function Login() {
                         <input
                             type='email'
                             value={email}
-                            onChange={e => setEmail(e.target.value)}
+                            onChange={e => { setEmail(e.target.value); setApiError(''); }}
+                            onKeyDown={handleKeyDown}
                             placeholder='alan.turing@example.com'
                             className='w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#111] border border-[#2a2a2a] text-sm text-white placeholder-[#444] focus:outline-none hover:border-[#444242] focus:border-[#D9A919] transition-all duration-200'
                         />
                     </div>
                 </div>
+
                 <div className='mb-6'>
                     <div className='flex justify-between items-center mb-1.5'>
                         <label className='text-sm font-medium text-[#aaa]'>Password</label>
@@ -79,7 +127,8 @@ export default function Login() {
                         <input
                             type={showPassword ? 'text' : 'password'}
                             value={password}
-                            onChange={e => setPassword(e.target.value)}
+                            onChange={e => { setPassword(e.target.value); setApiError(''); }}
+                            onKeyDown={handleKeyDown}
                             placeholder='••••••••'
                             className='w-full pl-10 pr-10 py-2.5 rounded-xl bg-[#111] border border-[#2a2a2a] text-sm text-white placeholder-[#444] focus:outline-none hover:border-[#444242] focus:border-[#D9A919] transition-all duration-200'
                         />
@@ -92,7 +141,22 @@ export default function Login() {
                         </button>
                     </div>
                 </div>
-                <button className='w-full py-2.5 rounded-xl bg-[#D9A919] text-black font-semibold text-sm hover:shadow-[0_0_20px_rgba(217,169,25,0.35)] hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none cursor-pointer' disabled={!email || !password}>Log in</button>
+
+                <button
+                    onClick={handleLogin}
+                    disabled={!email || !password || loading}
+                    className='w-full py-2.5 rounded-xl bg-[#D9A919] text-black font-semibold text-sm hover:shadow-[0_0_20px_rgba(217,169,25,0.35)] hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none cursor-pointer'
+                >
+                    {loading ? (
+                        <span className='flex items-center justify-center gap-2'>
+                            <Spinner />
+                            Logging in…
+                        </span>
+                    ) : (
+                        'Log in'
+                    )}
+                </button>
+
                 <p className='mt-5 text-center text-xs text-[#444] leading-relaxed'>
                     By signing in, you agree to our{' '}
                     <Link to='/terms' className='text-[#888] hover:text-[#D9A919] transition-colors duration-200'>Terms</Link>
@@ -101,5 +165,5 @@ export default function Login() {
                 </p>
             </div>
         </div>
-    );
+    )
 }
