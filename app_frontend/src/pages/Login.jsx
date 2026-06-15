@@ -36,8 +36,14 @@ export default function Login() {
         setApiError('');
         try {
             setLoading(true);
-            const data = await loginUser({ email: email.trim(), password });
-            if (data.success) navigate('/');
+            const data = await loginUser({
+                email: email.trim(),
+                password
+            })
+            if (data.success) {
+                localStorage.setItem('token', data.token)
+                navigate('/')
+            }
         } catch (error) {
             setApiError(
                 error.response?.data?.message ||

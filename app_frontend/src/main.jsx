@@ -7,6 +7,7 @@ import Login from "./pages/Login.jsx";
 import About from "./pages/About.jsx";
 import Signup from "./pages/Signup.jsx";
 import NotFound from './pages/NotFound.jsx';
+import AnalyseResume from './pages/AnalyseResume.jsx';
 
 const router = createBrowserRouter([
   {
@@ -20,6 +21,14 @@ const router = createBrowserRouter([
   {
     path: "/about",
     element: <About />,
+  },
+  {
+    path: "/signup",
+    element: <Signup />,
+  },
+  {
+    path: "/analyseresume",
+    element: <AnalyseResume />,
   },
   {
     path: "/signup",
