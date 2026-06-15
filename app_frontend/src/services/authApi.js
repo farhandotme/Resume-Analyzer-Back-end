@@ -17,6 +17,7 @@ export const createAccount = async (data) => {
 
 export const loginUser = async (data) => {
     const response = await api.post('/user/api/login', data);
+    console.log(response.data)
     return response.data;
 };
 
