@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { ArrowLeft, Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle } from 'lucide-react';
 import { loginUser } from '../services/authApi';
 
@@ -9,7 +9,7 @@ function Spinner() {
             <circle cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='3' strokeOpacity='0.3'/>
             <path d='M12 2a10 10 0 0 1 10 10' stroke='currentColor' strokeWidth='3' strokeLinecap='round'/>
         </svg>
-    );
+    )
 }
 
 function ApiErrorBanner({ error }) {
@@ -20,7 +20,7 @@ function ApiErrorBanner({ error }) {
                 <span className='translate-y-px'>{error}</span>
             </div>
         </div>
-    );
+    )
 }
 
 export default function Login() {
@@ -29,8 +29,6 @@ export default function Login() {
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [apiError, setApiError] = useState('');
-
-    const navigate = useNavigate();
 
     const handleLogin = async () => {
         setApiError('');
@@ -42,7 +40,7 @@ export default function Login() {
             })
             if (data.success) {
                 localStorage.setItem('token', data.token)
-                navigate('/')
+                window.location.href = '/'
             }
         } catch (error) {
             setApiError(

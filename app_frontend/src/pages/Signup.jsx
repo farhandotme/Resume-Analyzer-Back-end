@@ -9,22 +9,22 @@ const RULES = {
         messages: {
             empty: 'Full name is required.',
             invalid: 'Enter 2-7 words, each 2-20 letters. No numbers or symbols.',
-        },
+        }
     },
     email: {
         regex: /^[a-zA-Z0-9._%+-]{1,30}@[a-zA-Z0-9.-]{2,30}\.[a-zA-Z]{2,20}$/,
         messages: {
             empty: 'Email address is required.',
             invalid: 'Enter a valid email address (e.g. you@example.com).',
-        },
+        }
     },
     password: {
         regex: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':'\\|,.<>/?]).{8,50}$/,
         messages: {
             empty: 'Password is required.',
             invalid: 'Must be 8-50 characters with uppercase, lowercase, number, and special character.',
-        },
-    },
+        }
+    }
 };
 
 function validate(field, value, extra = {}) {
@@ -158,7 +158,7 @@ function Background() {
                 ))}
             </svg>
         </>
-    );
+    )
 }
 
 function Panel({ index, step, children }) {
@@ -175,10 +175,10 @@ function StepInfo({ values, setValues, onNext }) {
     const [loading, setLoading] = useState(false);
     const [apiError, setApiError] = useState('');
     const set = (field) => (e) => {
-        setValues((v) => ({ ...v, [field]: e.target.value }));
-        if (activeErrorField === field) setActiveErrorField(null);
-        if (apiError) setApiError('');
-    };
+        setValues((v) => ({ ...v, [field]: e.target.value }))
+        if (activeErrorField === field) setActiveErrorField(null)
+        if (apiError) setApiError('')
+    }
     const errorFor = (field) => activeErrorField === field ? validate(field, values[field]) : null;
 
     const isValid = values.fullName && values.email;
@@ -500,7 +500,8 @@ function StepOtp({ email, onNext, onBack, active }) {
     );
 }
 
-function StepPassword({ name, email, onDone }) {
+function StepPassword({ name, email }) {
+
     const [values, setValues] = useState({
         password: '',
         confirmPassword: '',
@@ -534,7 +535,11 @@ function StepPassword({ name, email, onDone }) {
             setLoading(true);
             const data = await createAccount({ email, password: values.password })
             console.log(data);
-            if (data.success) onDone();
+            console.log(data.user.token)
+            if (data.success) {
+                localStorage.setItem('token', data.user.token)
+                window.location.href = '/'
+            }
         } catch (error) {
             setApiError(
                 error.response?.data?.error ||
@@ -658,12 +663,12 @@ function StepPassword({ name, email, onDone }) {
 const STEP_HEIGHTS = ['auto', '340px', '420px'];
 
 export default function Signup() {
-    const [step, setStep] = useState(0);
-    const [info, setInfo] = useState({ fullName: '', email: '' });
+    const [step, setStep] = useState(0)
+    const [info, setInfo] = useState({ fullName: '', email: '' })
 
-    const navigate = useNavigate();
+    const navigate = useNavigate()
 
-    const goTo = (nextStep) => setStep(nextStep);
+    const goTo = (nextStep) => setStep(nextStep)
 
     return (
         <div className='relative min-h-screen w-full bg-[#0A0A0A] text-white overflow-hidden flex items-center justify-center'>
@@ -689,20 +694,11 @@ export default function Signup() {
                     </div>
 
                     <Panel index={1} step={step}>
-                        <StepOtp
-                            email={info.email}
-                            active={step === 1}
-                            onNext={() => goTo(2)}
-                            onBack={() => goTo(0)}
-                        />
+                        <StepOtp email={info.email} active={step === 1} onNext={() => goTo(2)} onBack={() => goTo(0)} />
                     </Panel>
 
                     <Panel index={2} step={step}>
-                        <StepPassword
-                            name={info.fullName}
-                            email={info.email}
-                            onDone={() => navigate('/')}
-                        />
+                        <StepPassword name={info.fullName} email={info.email} onDone={() => navigate('/')} />
                     </Panel>
                 </div>
             </div>
