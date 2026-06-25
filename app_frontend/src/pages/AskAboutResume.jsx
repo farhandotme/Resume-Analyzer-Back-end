@@ -400,13 +400,23 @@ export default function AskAboutResume() {
                                 </div>
                             </div>
 
-                            <button
-                                onClick={handleChangeResume}
-                                title='Use a different resume'
-                                className='shrink-0 w-8 h-8 rounded-lg border border-[#1f1f1f] hover:border-[#4a3a10] text-[#777] hover:text-[#D9A919] flex items-center justify-center transition-colors duration-200 cursor-pointer'
-                            >
-                                <RotateCcw size={14} />
-                            </button>
+                            <div className='flex items-center gap-2 shrink-0'>
+                                <button
+                                    onClick={() => navigate('/')}
+                                    title='Home'
+                                    className='w-8 h-8 rounded-lg border border-[#1f1f1f] hover:border-[#4a3a10] text-[#777] hover:text-[#D9A919] flex items-center justify-center transition-colors duration-200 cursor-pointer'
+                                >
+                                    <ArrowLeft size={14} />
+                                </button>
+
+                                <button
+                                    onClick={handleChangeResume}
+                                    title='Use a different resume'
+                                    className='w-8 h-8 rounded-lg border border-[#1f1f1f] hover:border-[#4a3a10] text-[#777] hover:text-[#D9A919] flex items-center justify-center transition-colors duration-200 cursor-pointer'
+                                >
+                                    <RotateCcw size={14} />
+                                </button>
+                            </div>
                         </div>
                     </div>
 

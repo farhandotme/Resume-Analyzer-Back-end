@@ -287,9 +287,12 @@ export default function ResumeUpload() {
             toast('Resume analyzed successfully.', 'success');
         } catch (err) {
             clearInterval(loadingIntervalRef.current);
+
+            console.log('ERROR RESPONSE:', err.response);
+            console.log('ERROR DATA:', err.response?.data);
+
             setError('Analysis failed. Please try again.');
             toast('Failed to analyze resume.', 'error');
-            console.error(err);
         } finally {
             setAnalyzing(false);
         }

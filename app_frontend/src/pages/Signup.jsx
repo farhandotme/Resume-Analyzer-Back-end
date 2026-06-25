@@ -336,7 +336,7 @@ function StepOtp({ email, onNext, onBack, active }) {
 
     useEffect(() => {
         if (active && !prevActiveRef.current) {
-            setResendTimer(60);
+            setResendTimer(30);
             setOtp(Array(OTP_LENGTH).fill(''));
             setActiveError('');
             setResendSuccess(false);
@@ -503,7 +503,7 @@ function StepOtp({ email, onNext, onBack, active }) {
     );
 }
 
-function StepPassword({ name, email }) {
+function StepPassword({ name, email, onDone }) {
     const [values, setValues] = useState({
         password: '',
         confirmPassword: '',
@@ -550,10 +550,8 @@ function StepPassword({ name, email }) {
                 );
 
                 const redirectPath = localStorage.getItem('redirectAfterLogin') || '/';
-
                 localStorage.removeItem('redirectAfterLogin');
-
-                window.location.href = redirectPath;
+                onDone(redirectPath);
             }
         } catch (error) {
             setApiError(error.response?.data?.error || 'Something went wrong. Please try again.');
@@ -688,7 +686,13 @@ export default function Signup() {
                 </Link>
             ) : (
                 <button
-                    onClick={() => goTo(step - 1)}
+                    onClick={() => {
+                        if (step === 2) {
+                            goTo(0);
+                        } else {
+                            goTo(step - 1);
+                        }
+                    }}
                     className='group absolute top-6 left-6 flex items-center gap-1.5 text-sm md:text-base text-[#8a8686] hover:text-[#D9A919] transition-colors duration-200 z-10 cursor-pointer'
                 >
                     <ArrowLeft className='duration-300 group-hover:-translate-x-0.5 transition-transform' size={15} strokeWidth={2} />
@@ -716,7 +720,7 @@ export default function Signup() {
                     </Panel>
 
                     <Panel index={2} step={step}>
-                        <StepPassword name={info.fullName} email={info.email} onDone={() => navigate('/')} />
+                        <StepPassword name={info.fullName} email={info.email} onDone={(path) => navigate(path, { replace: true })} />
                     </Panel>
                 </div>
             </div>
